@@ -1,9 +1,6 @@
-# reasons you might want to use `environment.yaml` instead of `requirements.txt`:
-# - pip installs packages in a loop, without ensuring dependencies across all packages
-#   are fulfilled simultaneously, but conda achieves proper dependency control across
-#   all packages
-# - conda allows for installing packages without requiring certain compilers or
-#   libraries to be available in the system, since it installs precompiled binaries
+# 你可能想使用 `environment.yaml` 而不是 `requirements.txt` 的原因：
+# - pip 会循环安装软件包，无法确保同时满足所有软件包的依赖关系，而 conda 可以对所有软件包进行恰当的依赖控制
+# - conda 允许在系统中不需要某些编译器或库可用的情况下安装软件包，因为它安装的是预编译的二进制文件
 
 name: myenv
 
@@ -11,13 +8,10 @@ channels:
   - conda-forge
   - defaults
 
-# it is strongly recommended to specify versions of packages installed through conda
-# to avoid situation when version-unspecified packages install their latest major
-# versions which can sometimes break things
+# 强烈建议为通过 conda 安装的包指定版本
+# 以避免当包未指定版本时，安装它们的最新主版本可能会破坏现有环境
 
-# current approach below keeps the dependencies in the same major versions across all
-# users, but allows for different minor and patch versions of packages where backwards
-# compatibility is usually guaranteed
+# 目前的做法在所有用户之间保持相同的主版本，但允许在通常兼容的情况下使用不同的次版本和补丁版本
 
 dependencies:
   - cudatoolkit=11.8.*

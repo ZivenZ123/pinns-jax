@@ -28,7 +28,7 @@ def pde_fn(functional_model,
            params,
            outputs: Dict[str, jax.Array],
            x: jax.Array,
-           t: jax.Array):   
+           t: jax.Array):
     """Define the partial differential equations (PDEs)."""
 
     u_x, u_t = pinnsjax.utils.gradient(functional_model, argnums=(1, 2), order=1)(params, x, t, 'u')

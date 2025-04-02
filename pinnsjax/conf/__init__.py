@@ -1,1 +1,1 @@
-# this file is needed here to include configs when building project as a package
+# 这个文件是必需的，用于在将项目构建为包时包含配置

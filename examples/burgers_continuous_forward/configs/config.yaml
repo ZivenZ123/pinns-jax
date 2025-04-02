@@ -63,8 +63,8 @@ net:
 
 trainer:
   accelerator: gpu
-  max_epochs: 30000
-  check_val_every_n_epoch: 300
+  max_epochs: 1000
+  check_val_every_n_epoch: 100
 
 model:
   loss_fn: mse

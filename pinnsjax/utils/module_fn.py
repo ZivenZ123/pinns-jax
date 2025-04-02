@@ -7,19 +7,19 @@ from typing import Dict, List, Union, Optional, Tuple
 
 def sse(loss,
         preds,
-        target = None,
-        keys = None,
-        mid = None):
-    """Calculate the sum of squared errors (SSE) loss for given predictions and optional targets.
+        target=None,
+        keys=None,
+        mid=None):
+    """计算给定预测值和可选目标值的平方和误差 (SSE) 损失.
 
-    :param loss: Loss variable.
-    :param preds: Dictionary containing prediction tensors for different keys.
-    :param target: Dictionary containing target tensors (optional).
-    :param keys: List of keys for which to calculate SSE loss (optional).
-    :param mid: Index to separate predictions for mid-point calculation (optional).
-    :return: Calculated SSE loss.
+    :param loss: 损失变量.
+    :param preds: 包含不同键的预测张量的字典.
+    :param target: 包含目标张量的字典 (可选).
+    :param keys: 需要计算 SSE 损失的键列表 (可选).
+    :param mid: 用于中点计算的预测值分隔索引 (可选).
+    :return: 计算得到的 SSE 损失.
     """
-    
+
     if keys is None:
         return loss
 
@@ -27,27 +27,29 @@ def sse(loss,
         if target is None and mid is None:
             loss = loss + jnp.sum(jnp.square(preds[key]))
         elif target is None and mid is not None:
-            loss = loss + jnp.sum(jnp.square(preds[key][:mid] - preds[key][mid:]))
+            diff = preds[key][:mid] - preds[key][mid:]
+            loss = loss + jnp.sum(jnp.square(diff))
         elif target is not None:
             loss = loss + jnp.sum(jnp.square(preds[key] - target[key]))
 
     return loss
 
+
 def mse(loss,
         preds,
-        target = None,
-        keys = None,
-        mid = None):
-    """Calculate the mean squared error (MSE) loss for given predictions and optional targets.
+        target=None,
+        keys=None,
+        mid=None):
+    """计算给定预测值和可选目标值的均方误差 (MSE) 损失.
 
-    :param loss: Loss variable.
-    :param preds: Dictionary containing prediction tensors for different keys.
-    :param target: Dictionary containing target tensors (optional).
-    :param keys: List of keys for which to calculate SSE loss (optional).
-    :param mid: Index to separate predictions for mid-point calculation (optional).
-    :return: Calculated MSE loss.
+    :param loss: 损失变量.
+    :param preds: 包含不同键的预测张量的字典.
+    :param target: 包含目标张量的字典 (可选).
+    :param keys: 需要计算 SSE 损失的键列表 (可选).
+    :param mid: 用于中点计算的预测值分隔索引 (可选).
+    :return: 计算得到的 MSE 损失.
     """
-    
+
     if keys is None:
         return loss
 
@@ -55,7 +57,8 @@ def mse(loss,
         if target is None and mid is None:
             loss = loss + jnp.mean(jnp.square(preds[key]))
         elif target is None and mid is not None:
-            loss = loss + jnp.mean(jnp.square(preds[key][:mid] - preds[key][mid:]))
+            diff = preds[key][:mid] - preds[key][mid:]
+            loss = loss + jnp.mean(jnp.square(diff))
         elif target is not None:
             loss = loss + jnp.mean(jnp.square(preds[key] - target[key]))
 
@@ -63,24 +66,25 @@ def mse(loss,
 
 
 def relative_l2_error(preds, target):
-    """Calculate the relative L2 error between predictions and target tensors.
+    """计算预测张量和目标张量之间的相对 L2 误差.
 
-    :param preds: Predicted tensors.
-    :param target: Target tensors.
-    :return: Relative L2 error value.
+    :param preds: 预测张量.
+    :param target: 目标张量.
+    :return: 相对 L2 误差值.
     """
-    
-    return jnp.sqrt(jnp.mean(jnp.square(preds - target))/jnp.mean(jnp.square(target)))
+
+    numerator = jnp.mean(jnp.square(preds - target))
+    denominator = jnp.mean(jnp.square(target))
+    return jnp.sqrt(numerator/denominator)
 
 
 def fix_extra_variables(trainable_variables, extra_variables):
-    """Convert extra variables to tf tensors with gradient tracking. These variables are
-    trainables in inverse problems.
+    """将额外变量转换为带有梯度跟踪的 tf 张量. 这些变量在反问题中是可训练的.
 
-    :param extra_variables: Dictionary of extra variables to be converted.
-    :return: Dictionary of converted extra variables as tf tensors with gradients.
+    :param extra_variables: 需要转换的额外变量字典.
+    :return: 转换后的额外变量字典, 作为带有梯度的 tf 张量.
     """
-    
+
     if extra_variables is None:
         return trainable_variables, None
     extra_variables_dict = {}
@@ -92,16 +96,16 @@ def fix_extra_variables(trainable_variables, extra_variables):
 
 
 def make_functional(net, params, n_dim, discrete, output_fn):
-    """Make model functional based on number of dimension.
+    """根据维度数使模型具有函数式特性.
 
-    :param net: The neural network model.
-    :param params: The parameters of the model.
-    :param n_dim: The number of dimensions.
-    :param output_fn: Output function applied to the output.
-    :return: A functional model and shape in axes.
+    :param net: 神经网络模型.
+    :param params: 模型参数.
+    :param n_dim: 维度数.
+    :param output_fn: 应用于输出的输出函数.
+    :return: 函数式模型和轴形状.
     """
 
-    def functional_model_1d(params, x, time, output_c=None):            
+    def functional_model_1d(params, x, time, output_c=None):
         return _execute_model(net, params, [x], time, output_c)
 
     def functional_model_2d(params, x, y, time, output_c=None):
@@ -131,7 +135,7 @@ def make_functional(net, params, n_dim, discrete, output_fn):
 
     def _execute_model(net, params, inputs, time, output_c):
         outputs_dict = net(params, inputs, time)
-    
+
         if output_c is None:
             return outputs_dict
         else:
@@ -142,35 +146,35 @@ def make_functional(net, params, n_dim, discrete, output_fn):
         3: functional_model_2d,
         4: functional_model_3d,
     }
-    
+
     functional_model_fun = models[n_dim]
 
-    
     try:
         return models[n_dim]
     except KeyError:
-        raise ValueError(f"{n_dim} number of dimensions is not supported.")
+        raise ValueError(f"{n_dim} 维度数不受支持.")
     '''
 
-    #output_fn = output_fn if output_fn is None else functools.partial(jax.vmap,
-    #                                                                  in_axes=functional_model_fun.in_axes)(output_fn)
+    #output_fn = (output_fn if output_fn is None 
+    #            else functools.partial(jax.vmap,
+    #                                  in_axes=functional_model_fun.in_axes)(output_fn))
 
     def functional_model(params, x, y, z, time, output_c=None):
-
         outputs = functional_model_fun(params, x, y, z, time)
-        
+
         #return outputs
         #if output_fn:
-        #    outputs = output_fn(functional_model_fun,  params, outputs, x, time)
+        #    outputs = output_fn(functional_model_fun, params, outputs, x, time)
 
         if output_c is None:
             return outputs
         else:
             return [outputs[output_].squeeze() for output_ in output_c]
-            
+
     if discrete:
         functional_model.in_axes = functional_model_fun.in_axes
-        functional_model.in_axes_discrete = functional_model_fun.in_axes_discrete
+        functional_model.in_axes_discrete = (
+            functional_model_fun.in_axes_discrete)
         functional_model.discrete = discrete
     else:
         functional_model.in_axes = functional_model_fun.in_axes

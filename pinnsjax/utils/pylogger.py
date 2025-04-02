@@ -1,11 +1,14 @@
+"""日志记录器模块，提供兼容 TensorFlow 2 的 Python 命令行日志记录功能。"""
+
 import logging
 
+
 def get_pylogger(name: str = __name__) -> logging.Logger:
-    """Initializes a TensorFlow 2 compatible python command line logger.
+    """初始化一个兼容 TensorFlow 2 的 Python 命令行日志记录器。
 
-    :param name: The name of the logger, defaults to ``__name__``.
+    :param name: 日志记录器的名称，默认为 "__name__"。
 
-    :return: A logger object.
+    :return: 一个日志记录器对象。
     """
     logger = logging.getLogger(name)
 

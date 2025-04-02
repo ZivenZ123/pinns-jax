@@ -6,15 +6,15 @@ from .sampler_base import SamplerBase
 
 
 class InitialCondition(SamplerBase):
-    """Initialize initial boundary condition."""
+    """初始化初始边界条件。"""
 
     def __init__(self, mesh, num_sample=None, solution=None, initial_fun=None, dtype: str = 'float32'):
-        """Initialize an InitialCondition object for sampling initial condition data.
+        """初始化一个用于采样初始条件数据的InitialCondition对象。
 
-        :param mesh: Mesh object containing spatial and time domain information.
-        :param num_sample: Number of samples.
-        :param solution: List of solution variable names.
-        :param initial_fun: Function to generate initial conditions (optional).
+        :param mesh: 包含空间和时间域信息的网格对象。
+        :param num_sample: 样本数量。
+        :param solution: 解变量名称列表。
+        :param initial_fun: 生成初始条件的函数（可选）。
         """
         super().__init__(dtype)
 
@@ -37,16 +37,15 @@ class InitialCondition(SamplerBase):
                                                 indices_or_sections=self.spatial_domain_sampled.shape[1],
                                                 axis=1)
         self.solution_sampled = jnp.split(self.solution_sampled, 
-                                          indices_or_sections=self.solution_sampled.shape[1], 
-                                          axis=1)
+                                        indices_or_sections=self.solution_sampled.shape[1], 
+                                        axis=1)
 
     def sample_mesh(self, num_sample, flatten_mesh):
-        """Sample the mesh data for training. If num_sample is not defined the whole points will be
-        selected.
+        """对网格数据进行采样用于训练。如果未定义num_sample，则将选择所有点。
 
-        :param num_sample: Number of samples to generate.
-        :param flatten_mesh: Flattened mesh data.
-        :return: Sampled spatial, time, and solution data.
+        :param num_sample: 要生成的样本数量。
+        :param flatten_mesh: 扁平化的网格数据。
+        :return: 采样后的空间、时间和解数据。
         """
         flatten_mesh = list(flatten_mesh)
         concatenated_solutions = [
@@ -63,12 +62,13 @@ class InitialCondition(SamplerBase):
             )
 
     def loss_fn(self, params, inputs, loss, functions):
-        """Compute the loss function based on inputs and functions.
+        """基于输入和函数计算损失函数。
 
-        :param inputs: Input data for computing the loss.
-        :param loss: Loss variable.
-        :param functions: Additional functions required for loss computation.
-        :return: Loss variable and outputs dict from the forward pass.
+        :param params: 模型参数。
+        :param inputs: 用于计算损失的输入数据。
+        :param loss: 损失变量。
+        :param functions: 损失计算所需的额外函数。
+        :return: 损失变量和前向传播的输出字典。
         """
 
         x, t, u = inputs
