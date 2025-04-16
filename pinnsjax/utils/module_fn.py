@@ -12,12 +12,15 @@ def sse(loss,
         mid=None):
     """计算给定预测值和可选目标值的平方和误差 (SSE) 损失.
 
-    :param loss: 损失变量.
-    :param preds: 包含不同键的预测张量的字典.
-    :param target: 包含目标张量的字典 (可选).
-    :param keys: 需要计算 SSE 损失的键列表 (可选).
-    :param mid: 用于中点计算的预测值分隔索引 (可选).
-    :return: 计算得到的 SSE 损失.
+    参数:
+        loss: 损失变量.
+        preds: 包含不同键的预测张量的字典.
+        target: 包含目标张量的字典 (可选).
+        keys: 需要计算 SSE 损失的键列表 (可选).
+        mid: 用于中点计算的预测值分隔索引 (可选).
+
+    返回:
+        计算得到的 SSE 损失.
     """
 
     if keys is None:
@@ -42,12 +45,15 @@ def mse(loss,
         mid=None):
     """计算给定预测值和可选目标值的均方误差 (MSE) 损失.
 
-    :param loss: 损失变量.
-    :param preds: 包含不同键的预测张量的字典.
-    :param target: 包含目标张量的字典 (可选).
-    :param keys: 需要计算 SSE 损失的键列表 (可选).
-    :param mid: 用于中点计算的预测值分隔索引 (可选).
-    :return: 计算得到的 MSE 损失.
+    参数:
+        loss: 损失变量.
+        preds: 包含不同键的预测张量的字典.
+        target: 包含目标张量的字典 (可选).
+        keys: 需要计算 SSE 损失的键列表 (可选).
+        mid: 用于中点计算的预测值分隔索引 (可选).
+
+    返回:
+        计算得到的 MSE 损失.
     """
 
     if keys is None:
@@ -68,9 +74,12 @@ def mse(loss,
 def relative_l2_error(preds, target):
     """计算预测张量和目标张量之间的相对 L2 误差.
 
-    :param preds: 预测张量.
-    :param target: 目标张量.
-    :return: 相对 L2 误差值.
+    参数:
+        preds: 预测张量.
+        target: 目标张量.
+
+    返回:
+        相对 L2 误差值.
     """
 
     numerator = jnp.mean(jnp.square(preds - target))
@@ -81,8 +90,12 @@ def relative_l2_error(preds, target):
 def fix_extra_variables(trainable_variables, extra_variables):
     """将额外变量转换为带有梯度跟踪的 tf 张量. 这些变量在反问题中是可训练的.
 
-    :param extra_variables: 需要转换的额外变量字典.
-    :return: 转换后的额外变量字典, 作为带有梯度的 tf 张量.
+    参数:
+        trainable_variables: 可训练变量字典
+        extra_variables: 需要转换的额外变量字典
+
+    返回:
+        转换后的额外变量字典, 作为带有梯度的 tf 张量.
     """
 
     if extra_variables is None:
@@ -98,12 +111,36 @@ def fix_extra_variables(trainable_variables, extra_variables):
 def make_functional(net, params, n_dim, discrete, output_fn):
     """根据维度数使模型具有函数式特性.
 
-    :param net: 神经网络模型.
-    :param params: 模型参数.
-    :param n_dim: 维度数.
-    :param output_fn: 应用于输出的输出函数.
-    :return: 函数式模型和轴形状.
+    参数:
+        net: 神经网络模型.
+        params: 模型参数.
+        n_dim: 维度数.
+        discrete: 是否使用离散模式.
+        output_fn: 应用于输出的输出函数.
+
+    返回:
+        函数式模型和轴形状.
     """
+
+    def _execute_model(net, params, inputs, time, output_c):
+        """执行神经网络模型并处理输出.
+
+        参数:
+            net: 神经网络模型
+            params: 模型参数
+            inputs: 输入数据列表
+            time: 时间数据
+            output_c: 输出控制参数
+
+        返回:
+            处理后的模型输出
+        """
+        outputs_dict = net(params, inputs, time)
+
+        if output_c is None:
+            return outputs_dict
+        else:
+            return outputs_dict[output_c].squeeze()
 
     def functional_model_1d(params, x, time, output_c=None):
         return _execute_model(net, params, [x], time, output_c)
@@ -133,14 +170,6 @@ def make_functional(net, params, n_dim, discrete, output_fn):
         functional_model_3d.in_axes = (None, None, 0, 0, 0, 0, 0)
         functional_model_3d.in_axes_gard = (None, 0, 0, 0, 0, None)
 
-    def _execute_model(net, params, inputs, time, output_c):
-        outputs_dict = net(params, inputs, time)
-
-        if output_c is None:
-            return outputs_dict
-        else:
-            return outputs_dict[output_c].squeeze()
-
     models = {
         2: functional_model_1d,
         3: functional_model_2d,
@@ -153,8 +182,8 @@ def make_functional(net, params, n_dim, discrete, output_fn):
         return models[n_dim]
     except KeyError:
         raise ValueError(f"{n_dim} 维度数不受支持.")
-    '''
 
+    '''
     #output_fn = (output_fn if output_fn is None 
     #            else functools.partial(jax.vmap,
     #                                  in_axes=functional_model_fun.in_axes)(output_fn))

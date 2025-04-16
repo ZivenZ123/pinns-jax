@@ -1,94 +1,70 @@
-"""梯度计算工具模块，提供各种微分运算的实现。"""
+"""梯度计算工具模块, 提供各种微分运算的实现。"""
 
-import jax
+from typing import Any, Callable, Union, Sequence
+from jax import jacfwd, jacrev, hessian, vmap
+
+__all__ = ['gradient', 'fwd_gradient', 'hessian']
 
 
-def gradient(functional_model, argnums, order=1):
-    """计算函数模型的梯度。
+def gradient(
+    functional_model: Callable[..., Any],
+    argnums: Union[int, Sequence[int]],
+    order: int = 1
+) -> Callable[..., Any]:
+    """计算函数的梯度(反向模式)。
 
-    Args:
-        functional_model: 需要计算梯度的函数模型
-        argnums: 计算梯度的参数索引
+    参数:
+        functional_model: 需要计算梯度的函数
+        argnums: 指定要对哪些参数计算导数。可以是单个整数, 表示要对第几个参数求导;
+                也可以是整数序列, 表示要对多个参数求导。例如: 0表示对第一个参数求导,
+                (0,1)表示对前两个参数求导。
         order: 梯度的阶数, 默认为1
 
-    Returns:
+    返回:
         计算得到的梯度函数
     """
     grad_functional_model = functional_model
     for _ in range(order):
-        grad_functional_model = jax.jacrev(
+        grad_functional_model = jacrev(
             grad_functional_model, argnums=argnums
         )
     if functional_model.discrete:
-        grad_functional_model = jax.vmap(
+        grad_functional_model = vmap(
             grad_functional_model,
             in_axes=functional_model.in_axes_discrete
         )
     else:
-        grad_functional_model = jax.vmap(
+        grad_functional_model = vmap(
             grad_functional_model,
             in_axes=functional_model.in_axes_gard
         )
     return grad_functional_model
 
 
-def hessian(functional_model, argnums):
-    """计算函数模型的Hessian矩阵。
+def fwd_gradient(
+    functional_model: Callable[..., Any],
+    argnums: Union[int, Sequence[int]],
+    order: int
+) -> Callable[..., Any]:
+    """计算函数的梯度(前向模式)。
 
-    Args:
-        functional_model: 需要计算Hessian的函数模型
-        argnums: 计算Hessian的参数索引
-
-    Returns:
-        计算得到的Hessian函数
-    """
-    return jax.hessian(functional_model, argnums=argnums)
-
-
-def jacrev(functional_model, argnums):
-    """计算函数模型的Jacobian矩阵(反向模式)。
-
-    Args:
-        functional_model: 需要计算Jacobian的函数模型
-        argnums: 计算Jacobian的参数索引
-
-    Returns:
-        计算得到的Jacobian函数
-    """
-    return jax.jacrev(functional_model, argnums=argnums)
-
-
-def jacfwd(functional_model, argnums):
-    """计算函数模型的Jacobian矩阵(前向模式)。
-
-    Args:
-        functional_model: 需要计算Jacobian的函数模型
-        argnums: 计算Jacobian的参数索引
-
-    Returns:
-        计算得到的Jacobian函数
-    """
-    return jax.jacfwd(functional_model, argnums=argnums)
-
-
-def fwd_gradient(functional_model, argnums, order):
-    """计算函数模型的前向梯度。
-
-    Args:
-        functional_model: 需要计算梯度的函数模型
-        argnums: 计算梯度的参数索引
+    参数:
+        functional_model: 需要计算梯度的函数
+        argnums: 指定要对哪些参数计算导数。可以是单个整数, 表示要对第几个参数求导;
+                也可以是整数序列, 表示要对多个参数求导。例如: 0表示对第一个参数求导,
+                (0,1)表示对前两个参数求导。
         order: 梯度的阶数
 
-    Returns:
+    返回:
         计算得到的前向梯度函数
     """
     grad_functional_model = functional_model
     for _ in range(order):
-        grad_functional_model = jax.jacfwd(
+        grad_functional_model = jacfwd(
             grad_functional_model, argnums=argnums
         )
     if functional_model.discrete:
-        grad_functional_model = jax.vmap(
+        grad_functional_model = vmap(
             grad_functional_model,
             in_axes=functional_model.in_axes_discrete
         )

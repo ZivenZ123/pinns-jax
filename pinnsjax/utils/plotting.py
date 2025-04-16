@@ -12,6 +12,13 @@ from scipy.interpolate import griddata
 
 log = logging.getLogger(__name__)
 
+# # 设置中文字体
+# mpl.rcParams['font.sans-serif'] = [
+#     'PingFang SC', 'Hiragino Sans GB', 'STHeiti',
+#     'SimHei', 'Microsoft YaHei', 'Arial Unicode MS'
+# ]
+# mpl.rcParams['axes.unicode_minus'] = False  # 用来正常显示负号
+
 
 def figsize(scale, nplots=1):
     """根据给定的缩放比例和图表数量计算图表大小。
@@ -60,6 +67,12 @@ def savefig(filename, crop=True):
     dir_name = os.path.dirname(filename)
     if dir_name and not os.path.exists(dir_name):
         os.makedirs(dir_name)
+
+    # 设置保存时的字体
+    plt.rcParams['font.sans-serif'] = [
+        'PingFang SC', 'Hiragino Sans GB', 'STHeiti'
+    ]
+    plt.rcParams['axes.unicode_minus'] = False
 
     if crop:
         plt.savefig(f"{filename}.pdf", bbox_inches="tight", pad_inches=0)
