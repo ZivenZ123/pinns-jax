@@ -121,9 +121,9 @@ class MeshBase:
 
 
 class Mesh(MeshBase):
-    """要使用此类，您应定义SpatialDomain和TimeDomain类。
+    """要使用此类, 您应定义SpatialDomain和TimeDomain类。
 
-    如果网格的维度未确定，最好使用PointCloud。
+    如果网格的维度未确定, 最好使用PointCloud。
     """
 
     def __init__(
@@ -135,7 +135,7 @@ class Mesh(MeshBase):
         ub: List = None,
         lb: List = None,
     ):
-        """根据空间和时间域生成网格，并加载解数据。
+        """根据空间和时间域生成网格, 并加载解数据。
 
         :param spatial_domain: SpatialDomain类的实例。
         :param time_domain: TimeDomain类的实例。
@@ -164,7 +164,7 @@ class Mesh(MeshBase):
 
 
 class PointCloud(MeshBase):
-    """要使用此类，您应定义空间域、时间域和解的网格。"""
+    """要使用此类, 您应定义空间域、时间域和解的网格。"""
 
     def __init__(self, root_dir: str, read_data_fn: Callable, ub: List = None, lb: List = None):
         """生成点云网格并从文件中加载数据。

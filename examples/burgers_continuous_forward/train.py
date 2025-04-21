@@ -77,7 +77,7 @@ def pde_fn(
 @hydra.main(
     version_base="1.3",
     config_path="configs",
-    config_name="config.yaml"
+    config_name="config"
 )
 def main(cfg: DictConfig) -> Optional[float]:
     """训练的主入口点。

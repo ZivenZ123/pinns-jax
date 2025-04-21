@@ -1,28 +1,39 @@
-"""空间域模块，提供一维、二维和三维空间网格的生成功能。"""
+"""空间域模块。
 
+这个模块实现了用于表示和操作空间域的功能。它提供了不同维度（一维、二维和三维）空间域的初始化、网格生成以及基本的访问操作。"""
+
+from typing import Sequence, List, Union
 import numpy as np
 
 
 class Interval:
-    """初始化一个一维空间区间。"""
+    """一维空间区间类。
 
-    def __init__(self, x_interval, shape):
-        """初始化一个Interval对象, 表示一维空间区间。
+    这个类用于表示和操作一维空间区间，提供了一维空间区间的初始化、网格生成以及基本的访问操作。"""
 
-        :param x_interval: 表示空间区间[start_x, end_x]的元组或列表。
-        :param shape: 空间区间中的点数。
+    def __init__(
+        self,
+        x_interval: Sequence[float],
+        shape: int
+    ) -> None:
+        """初始化一个Interval对象以表示一维空间区间。
+
+        参数:
+            x_interval: 表示空间区间[起始x, 结束x]的序列。
+            shape: 空间区间中的点数。
         """
-
         self.x_interval = x_interval
         self.shape = shape
 
-    def generate_mesh(self, t_points: int):
+    def generate_mesh(self, t_points: int) -> np.ndarray:
         """为一维空间区间生成网格。
 
-        :param t_points: 网格中的时间点数量。
-        :return: 一维空间区间的网格。
-        """
+        参数:
+            t_points: 网格中的时间点数量。
 
+        返回:
+            一维空间区间的网格。
+        """
         x = np.linspace(
             self.x_interval[0],
             self.x_interval[1],
@@ -35,33 +46,41 @@ class Interval:
 
         return self.mesh
 
-    def __len__(self):
+    def __len__(self) -> int:
         """获取区间网格的长度。
 
-        :return: 区间网格中的点数。
+        返回:
+            区间网格中的点数。
         """
-
         return len(self.mesh)
 
-    def __getitem__(self, idx):
+    def __getitem__(
+        self,
+        idx: Union[int, slice, List[int]]
+    ) -> Union[float, np.ndarray]:
         """使用索引从区间网格获取特定点。
 
-        :param idx: 所需点的索引。
-        :return: 指定索引处的点值。
-        """
+        参数:
+            idx: 所需点的索引。
 
+        返回:
+            指定索引处的点值。
+        """
         return self.mesh[idx, 0]
 
 
 class Rectangle:
-    """初始化一个二维空间域。"""
+    """二维空间矩形类。
+
+    这个类用于表示和操作二维空间矩形，提供了二维空间矩形的初始化、网格生成以及基本的访问操作。"""
 
     def __init__(self, x_interval, y_interval, shape):
-        """初始化一个Rectangle对象, 表示二维空间矩形。
+        """初始化一个Rectangle对象以表示二维空间矩形。
 
-        :param x_interval: 表示x轴区间[start_x, end_x]的元组。
-        :param y_interval: 表示y轴区间[start_y, end_y]的元组。
-        :param shape: 矩形中每个轴上的点数。
+        参数:
+            x_interval: 表示x轴区间[起始x, 结束x]的元组。
+            y_interval: 表示y轴区间[起始y, 结束y]的元组。
+            shape: 矩形中每个轴上的点数。
         """
 
         self.x_interval = x_interval
@@ -71,8 +90,11 @@ class Rectangle:
     def generate_mesh(self, t_points):
         """为二维空间矩形生成网格。
 
-        :param t_points: 网格中的时间点数量。
-        :return: 二维空间矩形的网格。
+        参数:
+            t_points: 网格中的时间点数量。
+
+        返回:
+            二维空间矩形的网格。
         """
 
         x = np.linspace(
@@ -102,30 +124,37 @@ class Rectangle:
     def __len__(self):
         """获取矩形网格的长度。
 
-        :return: 矩形网格中的点数。
+        返回:
+            矩形网格中的点数。
         """
         return len(self.mesh)
 
     def __getitem__(self, idx):
         """使用索引从矩形网格获取特定点。
 
-        :param idx: 所需点的索引。
-        :return: 指定索引处的点值。
+        参数:
+            idx: 所需点的索引。
+
+        返回:
+            指定索引处的点值。
         """
 
         return self.mesh[idx, 0]
 
 
 class RectangularPrism:
-    """初始化一个三维空间域。"""
+    """三维空间立方体类。
+
+    这个类用于表示和操作三维空间立方体，提供了三维空间立方体的初始化、网格生成以及基本的访问操作。"""
 
     def __init__(self, x_interval, y_interval, z_interval, shape):
-        """初始化一个Rectangular Prism对象, 表示三维形状。
+        """初始化一个RectangularPrism对象以表示三维空间立方体。
 
-        :param x_interval: 表示x轴区间[start_x, end_x]的元组或列表。
-        :param y_interval: 表示y轴区间[start_y, end_y]的元组或列表。
-        :param z_interval: 表示z轴区间[start_z, end_z]的元组或列表。
-        :param shape: 立方体中每个轴上的点数。
+        参数:
+            x_interval: 表示x轴区间[起始x, 结束x]的元组或列表。
+            y_interval: 表示y轴区间[起始y, 结束y]的元组或列表。
+            z_interval: 表示z轴区间[起始z, 结束z]的元组或列表。
+            shape: 立方体中每个轴上的点数。
         """
 
         self.x_interval = x_interval
@@ -136,8 +165,11 @@ class RectangularPrism:
     def generate_mesh(self, t_points):
         """为三维空间立方体生成网格。
 
-        :param t_points: 网格中的时间点数量。
-        :return: 三维空间立方体的网格。
+        参数:
+            t_points: 网格中的时间点数量。
+
+        返回:
+            三维空间立方体的网格。
         """
 
         x = np.linspace(
@@ -172,14 +204,18 @@ class RectangularPrism:
     def __len__(self):
         """获取立方体网格的长度。
 
-        :return: 立方体网格中的点数。
+        返回:
+            立方体网格中的点数。
         """
         return len(self.mesh)
 
     def __getitem__(self, idx):
         """使用索引从立方体网格获取特定点。
 
-        :param idx: 所需点的索引。
-        :return: 指定索引处的点值。
+        参数:
+            idx: 所需点的索引。
+
+        返回:
+            指定索引处的点值。
         """
         return self.mesh[idx, 0]
