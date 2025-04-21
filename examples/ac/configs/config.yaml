@@ -16,7 +16,7 @@ time_domain:
 spatial_domain:
   _target_: pinnsjax.data.Interval
   x_interval: [-1, 0.99609375]
-  shape: [512, 1]
+  shape: 512
 
 mesh:
   _target_: pinnsjax.data.Mesh

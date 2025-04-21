@@ -16,7 +16,7 @@ time_domain:
 spatial_domain:
   _target_: pinnsjax.data.Interval
   x_interval: [-1, 1]
-  shape: [256, 1]
+  shape: 256
 
 mesh:
   _target_: pinnsjax.data.Mesh
@@ -49,7 +49,6 @@ train_datasets:
       discrete: ${discrete}
       solution:
         - u
-    
 
 val_dataset:
   - mesh_sampler:

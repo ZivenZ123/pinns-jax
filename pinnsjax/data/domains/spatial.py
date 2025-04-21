@@ -37,12 +37,12 @@ class Interval:
         x = np.linspace(
             self.x_interval[0],
             self.x_interval[1],
-            num=self.shape[0]
+            num=self.shape
         )
         # 使用广播机制代替 np.tile
-        self.mesh = x[:, np.newaxis, np.newaxis]  # 形状变为 (shape[0], 1, 1)
+        self.mesh = x[:, np.newaxis, np.newaxis]  # 形状变为 (shape, 1, 1)
         # 广播到所有时间点
-        self.mesh = np.broadcast_to(self.mesh, (self.shape[0], t_points, 1))
+        self.mesh = np.broadcast_to(self.mesh, (self.shape, t_points, 1))
 
         return self.mesh
 
