@@ -17,15 +17,16 @@ class TimeDomain:
         self,
         t_interval: Sequence[float],
         t_points: int
-    ) -> None:
+    ):
         """初始化一个TimeDomain对象以表示时间域。
 
         参数:
             t_interval: 表示时间区间[起始时间, 结束时间]的序列。
                 可以是任何支持索引访问的序列类型, 如列表、元组、numpy数组等。
-            t_points: 用于离散化区间的时间点数量。
+            t_points: 区间的时间点数量。
         """
         self.time_interval = t_interval
+        self.t_points = t_points
         self.time = np.linspace(
             self.time_interval[0],
             self.time_interval[1],
@@ -39,7 +40,8 @@ class TimeDomain:
             spatial_points: 空间点的数量。
 
         返回:
-            时间和空间点的网格。返回的是一个广播视图(broadcast view),
+            在(空间点索引, 时间点索引, 1)网格上对应的时间坐标。
+            返回的是一个广播视图(broadcast view),
             这意味着它共享原始时间数组的内存。由于是只读视图, 不能直接修改返回值。
             如果需要修改网格数据, 应该先使用 copy() 方法创建副本。
 
@@ -51,7 +53,7 @@ class TimeDomain:
         """
         mesh = np.broadcast_to(
             self.time[np.newaxis, :, np.newaxis],
-            (spatial_points, self.time.size, 1)
+            (spatial_points, self.t_points, 1)
         )
         return mesh
 
@@ -61,7 +63,7 @@ class TimeDomain:
         返回:
             时间域中的时间点数量。
         """
-        return len(self.time)
+        return self.t_points
 
     def __getitem__(
         self,

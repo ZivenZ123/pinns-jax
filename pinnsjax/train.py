@@ -14,8 +14,6 @@ from pinnsjax import utils
 from pinnsjax.models import PINNModule
 from pinnsjax.data import (
     Interval,
-    Mesh,
-    PointCloud,
     Rectangle,
     RectangularPrism,
     TimeDomain,
@@ -68,41 +66,43 @@ def train(
     """
 
     # ==================== 0. 初始化随机种子 ====================
-    if cfg.get("seed"):
-        np.random.seed(cfg.seed)
+    np.random.seed(cfg.seed)
 
     # ==================== 1. 初始化域和网格 ====================
     # 1.1 初始化时间域
-    if cfg.get("time_domain"):
-        log.info("实例化时间域 <%s>", cfg.time_domain.get("_target_"))
-        td: TimeDomain = instantiate(cfg.time_domain)
+    log.info("实例化时间域 <%s>", cfg.time_domain.get("_target_"))
+    td: TimeDomain = instantiate(cfg.time_domain)
 
     # 1.2 初始化空间域
-    if cfg.get("spatial_domain"):
-        log.info("实例化空间域 <%s>", cfg.spatial_domain.get("_target_"))
-        sd: Union[Interval, Rectangle, RectangularPrism] = (
-            instantiate(cfg.spatial_domain)
-        )
+    log.info("实例化空间域 <%s>", cfg.spatial_domain.get("_target_"))
+    sd: Union[Interval, Rectangle, RectangularPrism] = (
+        instantiate(cfg.spatial_domain)
+    )
 
     # 1.3 初始化网格
     log.info("实例化网格 <%s>", cfg.mesh.get("_target_"))
-    mesh_type = cfg.mesh.get("_target_", "pinnsjax.data.Mesh")
-    if mesh_type == "pinnsjax.data.Mesh":
-        mesh: Mesh = instantiate(
+    mesh_type = cfg.mesh.get("_target_")
+
+    def create_mesh():
+        return instantiate(
             cfg.mesh,
             time_domain=td,
             spatial_domain=sd,
             read_data_fn=read_data_fn
         )
-    elif mesh_type == "pinnsjax.data.PointCloud":
-        mesh: PointCloud = instantiate(
+
+    def create_point_cloud():
+        return instantiate(
             cfg.mesh,
             read_data_fn=read_data_fn
         )
-    else:
-        raise ValueError(
-            f"网格应在配置文件中定义, 但找到: {mesh_type}"
-        )
+
+    mesh_types = {
+        "pinnsjax.data.Mesh": create_mesh,
+        "pinnsjax.data.PointCloud": create_point_cloud
+    }
+
+    mesh = mesh_types[mesh_type]()
 
     # ==================== 2. 创建数据集 ====================
     # 2.1 创建训练数据集

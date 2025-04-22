@@ -2,6 +2,8 @@
 
 这个模块实现了用于表示和操作空间域的功能。它提供了不同维度（一维、二维和三维）空间域的初始化、网格生成以及基本的访问操作。"""
 
+__all__ = ["Interval", "Rectangle", "RectangularPrism"]
+
 from typing import Sequence, List, Union
 import numpy as np
 
@@ -9,66 +11,78 @@ import numpy as np
 class Interval:
     """一维空间区间类。
 
-    这个类用于表示和操作一维空间区间，提供了一维空间区间的初始化、网格生成以及基本的访问操作。"""
+    这个类用于表示和操作一维空间区间，提供了一维空间区间的初始化、网格生成以及基本的访问操作。
+    """
 
     def __init__(
         self,
         x_interval: Sequence[float],
         shape: int
-    ) -> None:
+    ):
         """初始化一个Interval对象以表示一维空间区间。
 
         参数:
             x_interval: 表示空间区间[起始x, 结束x]的序列。
-            shape: 空间区间中的点数。
+                可以是任何支持索引访问的序列类型, 如列表、元组、numpy数组等。
+            shape: 区间的空间点数量。
         """
         self.x_interval = x_interval
         self.shape = shape
-
-    def generate_mesh(self, t_points: int) -> np.ndarray:
-        """为一维空间区间生成网格。
-
-        参数:
-            t_points: 网格中的时间点数量。
-
-        返回:
-            一维空间区间的网格。
-        """
-        x = np.linspace(
+        self.x = np.linspace(
             self.x_interval[0],
             self.x_interval[1],
             num=self.shape
         )
-        # 使用广播机制代替 np.tile
-        self.mesh = x[:, np.newaxis, np.newaxis]  # 形状变为 (shape, 1, 1)
-        # 广播到所有时间点
-        self.mesh = np.broadcast_to(self.mesh, (self.shape, t_points, 1))
+        self.spatial_dim = 1
 
-        return self.mesh
+    def generate_mesh(self, t_points: int) -> np.ndarray:
+        """基于时间点数量生成空间网格。
 
-    def __len__(self) -> int:
-        """获取区间网格的长度。
+        参数:
+            t_points: 时间点的数量。
 
         返回:
-            区间网格中的点数。
+            在(空间点索引, 时间点索引, 1)网格上对应的空间坐标。
+            返回的是一个广播视图(broadcast view),
+            这意味着它共享原始空间数组的内存。由于是只读视图, 不能直接修改返回值。
+            如果需要修改网格数据, 应该先使用 copy() 方法创建副本。
+
+        注意:
+            由于返回的是只读视图, 任何尝试直接修改返回值的操作都会引发 ValueError。
+            如果需要修改网格数据, 应该先创建副本:
+            >>> mesh = interval.generate_mesh(t_points)
+            >>> mesh_copy = mesh.copy()  # 创建可修改的副本
         """
-        return len(self.mesh)
+        mesh = np.broadcast_to(
+            self.x[:, np.newaxis, np.newaxis],
+            (self.shape, t_points, self.spatial_dim)
+        )
+        return mesh
+
+    def __len__(self) -> int:
+        """获取空间区间的长度。
+
+        返回:
+            空间区间中的空间点数量。
+        """
+        return self.shape
 
     def __getitem__(
         self,
         idx: Union[int, slice, List[int]]
     ) -> Union[float, np.ndarray]:
-        """使用索引从区间网格获取特定点。
+        """使用索引从空间区间获取特定的空间点。
 
         参数:
-            idx: 所需点的索引。
+            idx: 所需空间点的索引。
 
         返回:
-            指定索引处的点值。
+            指定索引处的空间值。
         """
-        return self.mesh[idx, 0]
+        return self.x[idx]
 
 
+# todo 需要修改: 类型提示, generate_mesh的逻辑以及返回值的维度
 class Rectangle:
     """二维空间矩形类。
 
@@ -86,6 +100,7 @@ class Rectangle:
         self.x_interval = x_interval
         self.y_interval = y_interval
         self.shape = shape
+        self.spatial_dim = 2
 
     def generate_mesh(self, t_points):
         """为二维空间矩形生成网格。
@@ -116,7 +131,7 @@ class Rectangle:
         # 使用广播机制广播到所有时间点
         self.mesh = np.broadcast_to(
             spatial_expanded,
-            (np.prod(self.shape), t_points, 2)
+            (np.prod(self.shape), t_points, self.spatial_dim)
         )
 
         return self.mesh
@@ -142,6 +157,7 @@ class Rectangle:
         return self.mesh[idx, 0]
 
 
+# todo 需要修改: 类型提示, generate_mesh的逻辑以及返回值的维度
 class RectangularPrism:
     """三维空间立方体类。
 
@@ -161,6 +177,7 @@ class RectangularPrism:
         self.y_interval = y_interval
         self.z_interval = z_interval
         self.shape = shape
+        self.spatial_dim = 3
 
     def generate_mesh(self, t_points):
         """为三维空间立方体生成网格。
@@ -196,7 +213,7 @@ class RectangularPrism:
         # 使用广播机制广播到所有时间点
         self.mesh = np.broadcast_to(
             spatial_expanded,
-            (np.prod(self.shape), t_points, 3)
+            (np.prod(self.shape), t_points, self.spatial_dim)
         )
 
         return self.mesh

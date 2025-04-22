@@ -22,12 +22,13 @@ def read_data_fn(root_path: str) -> Dict[str, np.ndarray]:
 
     返回:
         处理后的数据将在Mesh类中使用。
+        在这里 exact_u 是一个 256*100 的 np.ndarray, 表示Burgers方程的精确解。
     """
 
     # * 从指定路径加载数据文件
     data = utils.load_data(root_path, "burgers_shock.mat")
     # * 获取精确解的实部
-    exact_u = np.real(data["usol"])
+    exact_u: np.ndarray = np.real(data["usol"])
     return {"u": exact_u}
 
 
