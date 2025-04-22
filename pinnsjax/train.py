@@ -107,61 +107,48 @@ def train(
     # ==================== 2. 创建数据集 ====================
     # 2.1 创建训练数据集
     train_datasets = []
-    for i, (dataset_dic) in enumerate(cfg.train_datasets):
-        for _, dataset in dataset_dic.items():
-            dataset_type = dataset.get("_target_", "pinnsjax.data.MeshSampler")
-            log.info("实例化训练数据集 %d: <%s>", i+1, dataset_type)
-            train_datasets.append(
-                instantiate(dataset)(
-                    mesh=mesh,
-                    dtype=cfg.dtype
-                )
+    for dataset_name, dataset in cfg.train_datasets.items():
+        dataset_type = dataset.get("_target_", "pinnsjax.data.MeshSampler")
+        log.info("实例化训练数据集 <%s>: <%s>", dataset_name, dataset_type)
+        train_datasets.append(
+            instantiate(dataset)(
+                mesh=mesh,
+                dtype=cfg.dtype
             )
+        )
 
     # 2.2 创建验证数据集
     val_dataset = None
     if cfg.get("val_dataset"):
-        for i, dataset_dic in enumerate(cfg.val_dataset):
-            for _, dataset in dataset_dic.items():
-                dataset_type = dataset.get(
-                    "_target_",
-                    "pinnsjax.data.MeshSampler"
-                )
-                log.info("实例化验证数据集 %d: <%s>", i+1, dataset_type)
-                val_dataset = instantiate(dataset)(
-                    mesh=mesh,
-                    dtype=cfg.dtype
-                )
+        for dataset_name, dataset in cfg.val_dataset.items():
+            dataset_type = dataset.get("_target_", "pinnsjax.data.MeshSampler")
+            log.info("实例化验证数据集 <%s>: <%s>", dataset_name, dataset_type)
+            val_dataset = instantiate(dataset)(
+                mesh=mesh,
+                dtype=cfg.dtype
+            )
 
     # 2.3 创建测试数据集
     test_dataset = None
     if cfg.get("test_dataset"):
-        for i, dataset_dic in enumerate(cfg.test_dataset):
-            for _, dataset in dataset_dic.items():
-                dataset_type = dataset.get(
-                    "_target_",
-                    "pinnsjax.data.MeshSampler"
-                )
-                log.info("实例化测试数据集 %d: <%s>", i+1, dataset_type)
-                test_dataset = instantiate(dataset)(
-                    mesh=mesh,
-                    dtype=cfg.dtype
-                )
+        for dataset_name, dataset in cfg.test_dataset.items():
+            dataset_type = dataset.get("_target_", "pinnsjax.data.MeshSampler")
+            log.info("实例化测试数据集 <%s>: <%s>", dataset_name, dataset_type)
+            test_dataset = instantiate(dataset)(
+                mesh=mesh,
+                dtype=cfg.dtype
+            )
 
     # 2.4 创建预测数据集
     pred_dataset = None
     if cfg.get("pred_dataset"):
-        for i, dataset_dic in enumerate(cfg.pred_dataset):
-            for _, dataset in dataset_dic.items():
-                dataset_type = dataset.get(
-                    "_target_",
-                    "pinnsjax.data.MeshSampler"
-                )
-                log.info("实例化预测数据集 %d: <%s>", i+1, dataset_type)
-                pred_dataset = instantiate(dataset)(
-                    mesh=mesh,
-                    dtype=cfg.dtype
-                )
+        for dataset_name, dataset in cfg.pred_dataset.items():
+            dataset_type = dataset.get("_target_", "pinnsjax.data.MeshSampler")
+            log.info("实例化预测数据集 <%s>: <%s>", dataset_name, dataset_type)
+            pred_dataset = instantiate(dataset)(
+                mesh=mesh,
+                dtype=cfg.dtype
+            )
 
     # 2.5 创建数据模块
     data_type = cfg.data.get("_target_", "pinnsjax.data.PINNDataModule")

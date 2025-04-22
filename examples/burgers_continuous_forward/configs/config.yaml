@@ -22,38 +22,38 @@ mesh:
   read_data_fn: ???
 
 train_datasets:
-  - mesh_sampler:
-      _target_: pinnsjax.data.MeshSampler
-      _partial_: true
-      num_sample: ${N_f}
-      collection_points:
-        - f
-  - initial_condition:
-      _target_: pinnsjax.data.InitialCondition
-      _partial_: true
-      num_sample: ${N0}
-      solution:
-        - u
-  - dirichlet_boundary_condition:
-      _target_: pinnsjax.data.DirichletBoundaryCondition
-      _partial_: true
-      num_sample: ${N_b}
-      solution:
-        - u
+  mesh_sampler:
+    _target_: pinnsjax.data.MeshSampler
+    _partial_: true
+    num_sample: ${N_f}
+    collection_points:
+      - f
+  initial_condition:
+    _target_: pinnsjax.data.InitialCondition
+    _partial_: true
+    num_sample: ${N0}
+    solution:
+      - u
+  dirichlet_boundary_condition:
+    _target_: pinnsjax.data.DirichletBoundaryCondition
+    _partial_: true
+    num_sample: ${N_b}
+    solution:
+      - u
 
 val_dataset:
-  - mesh_sampler:
-      _target_: pinnsjax.data.MeshSampler
-      _partial_: true
-      solution:
-        - u
+  mesh_sampler:
+    _target_: pinnsjax.data.MeshSampler
+    _partial_: true
+    solution:
+      - u
 
 pred_dataset:
-  - mesh_sampler:
-      _target_: pinnsjax.data.MeshSampler
-      _partial_: true
-      solution:
-        - u
+  mesh_sampler:
+    _target_: pinnsjax.data.MeshSampler
+    _partial_: true
+    solution:
+      - u
 
 net:
   _target_: pinnsjax.models.FCN
