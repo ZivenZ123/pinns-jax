@@ -70,17 +70,17 @@ def train(
 
     # ==================== 1. 初始化域和网格 ====================
     # 1.1 初始化时间域
-    log.info("实例化时间域 <%s>", cfg.time_domain.get("_target_"))
+    log.info("初始化时间域: <%s>", cfg.time_domain.get("_target_"))
     td: TimeDomain = instantiate(cfg.time_domain)
 
     # 1.2 初始化空间域
-    log.info("实例化空间域 <%s>", cfg.spatial_domain.get("_target_"))
+    log.info("初始化空间域: <%s>", cfg.spatial_domain.get("_target_"))
     sd: Union[Interval, Rectangle, RectangularPrism] = (
         instantiate(cfg.spatial_domain)
     )
 
     # 1.3 初始化网格
-    log.info("实例化网格 <%s>", cfg.mesh.get("_target_"))
+    log.info("初始化网格: <%s>", cfg.mesh.get("_target_"))
     mesh_type = cfg.mesh.get("_target_")
 
     def create_mesh():
@@ -107,9 +107,9 @@ def train(
     # ==================== 2. 创建数据集 ====================
     # 2.1 创建训练数据集
     train_datasets = []
-    for dataset_name, dataset in cfg.train_datasets.items():
-        dataset_type = dataset.get("_target_", "pinnsjax.data.MeshSampler")
-        log.info("实例化训练数据集 <%s>: <%s>", dataset_name, dataset_type)
+    for _, dataset in cfg.train_datasets.items():
+        dataset_type = dataset.get("_target_")
+        log.info("创建训练数据集: <%s>", dataset_type)
         train_datasets.append(
             instantiate(dataset)(
                 mesh=mesh,
@@ -120,9 +120,9 @@ def train(
     # 2.2 创建验证数据集
     val_dataset = None
     if cfg.get("val_dataset"):
-        for dataset_name, dataset in cfg.val_dataset.items():
-            dataset_type = dataset.get("_target_", "pinnsjax.data.MeshSampler")
-            log.info("实例化验证数据集 <%s>: <%s>", dataset_name, dataset_type)
+        for _, dataset in cfg.val_dataset.items():
+            dataset_type = dataset.get("_target_")
+            log.info("创建验证数据集: <%s>", dataset_type)
             val_dataset = instantiate(dataset)(
                 mesh=mesh,
                 dtype=cfg.dtype
@@ -131,9 +131,9 @@ def train(
     # 2.3 创建测试数据集
     test_dataset = None
     if cfg.get("test_dataset"):
-        for dataset_name, dataset in cfg.test_dataset.items():
-            dataset_type = dataset.get("_target_", "pinnsjax.data.MeshSampler")
-            log.info("实例化测试数据集 <%s>: <%s>", dataset_name, dataset_type)
+        for _, dataset in cfg.test_dataset.items():
+            dataset_type = dataset.get("_target_")
+            log.info("创建测试数据集: <%s>", dataset_type)
             test_dataset = instantiate(dataset)(
                 mesh=mesh,
                 dtype=cfg.dtype
@@ -142,17 +142,17 @@ def train(
     # 2.4 创建预测数据集
     pred_dataset = None
     if cfg.get("pred_dataset"):
-        for dataset_name, dataset in cfg.pred_dataset.items():
-            dataset_type = dataset.get("_target_", "pinnsjax.data.MeshSampler")
-            log.info("实例化预测数据集 <%s>: <%s>", dataset_name, dataset_type)
+        for _, dataset in cfg.pred_dataset.items():
+            dataset_type = dataset.get("_target_")
+            log.info("创建预测数据集: <%s>", dataset_type)
             pred_dataset = instantiate(dataset)(
                 mesh=mesh,
                 dtype=cfg.dtype
             )
 
     # 2.5 创建数据模块
-    data_type = cfg.data.get("_target_", "pinnsjax.data.PINNDataModule")
-    log.info("实例化数据模块 <%s>", data_type)
+    data_type = cfg.data.get("_target_")
+    log.info("创建数据模块: <%s>", data_type)
     datamodule: PINNDataModule = instantiate(
         cfg.data,
         train_datasets=train_datasets,
@@ -165,7 +165,7 @@ def train(
     # ==================== 3. 初始化模型 ====================
     # 3.1 初始化神经网络
     net_type = cfg.net.get("_target_", "pinnsjax.models.FCN")
-    log.info("实例化神经网络 <%s>", net_type)
+    log.info("初始化神经网络: <%s>", net_type)
 
     if net_type == "pinnsjax.models.FCN":
         net = instantiate(cfg.net)(
@@ -183,7 +183,7 @@ def train(
 
     # 3.2 初始化PINN模型
     model_type = cfg.model.get("_target_", "pinnsjax.models.PINNModule")
-    log.info("实例化模型 <%s>", model_type)
+    log.info("初始化模型: <%s>", model_type)
 
     model: PINNModule = instantiate(cfg.model)(
         net=net,
@@ -193,7 +193,7 @@ def train(
 
     # 3.3 初始化训练器
     trainer_type = cfg.trainer.get("_target_", "pinnsjax.trainer.Trainer")
-    log.info("实例化训练器 <%s>", trainer_type)
+    log.info("初始化训练器: <%s>", trainer_type)
     trainer: Trainer = instantiate(cfg.trainer)
 
     # 3.4 创建对象字典
@@ -207,7 +207,7 @@ def train(
     # ==================== 4. 训练过程 ====================
     # 4.1 执行训练
     if cfg.get("train"):
-        log.info("开始训练！")
+        log.info("开始训练!")
         start_time = time.time()
         try:
             trainer.fit(model=model, datamodule=datamodule)
@@ -223,14 +223,14 @@ def train(
 
     # 4.2 执行验证
     if cfg.get("val"):
-        log.info("开始验证！")
+        log.info("开始验证!")
         trainer.validate(model=model, datamodule=datamodule)
 
     train_metrics = trainer.callback_metrics
 
     # 4.3 执行测试
     if cfg.get("test"):
-        log.info("开始测试！")
+        log.info("开始测试!")
         ckpt_path = None  # 检查点回调中保存的最佳模型路径
         trainer = instantiate(cfg.trainer)
         trainer.test(model=model, datamodule=datamodule, ckpt_path=ckpt_path)

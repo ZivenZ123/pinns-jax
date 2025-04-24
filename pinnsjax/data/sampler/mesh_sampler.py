@@ -1,6 +1,6 @@
 """网格采样器模块。
 
-这个模块实现了用于从连续和离散模式的网格中采样的功能。它提供了两种采样器：
+这个模块实现了用于从连续和离散模式的网格中采样的功能。它提供了两种采样器:
 MeshSampler用于连续模式, DiscreteMeshSampler用于离散模式。
 """
 
@@ -27,59 +27,61 @@ class MeshSampler(SamplerBase):
         use_lhs: bool = True,
         dtype: str = 'float32'
     ):
-        """初始化一个用于收集训练数据的网格采样器。
+        """初始化网格采样器, 用于从网格中采样训练数据。
 
         参数:
-            mesh: 用于采样的网格实例。
-            idx_t: 时间步的索引。如果为None, 则采样所有时间步。
-            num_sample: 要生成的样本数量。
-            solution: 解输出的名称列表。
-            collection_points: 采集点模式的名称列表。
-            use_lhs: 是否使用拉丁超立方采样生成采集点。
-            dtype: 数据类型, 默认为'float32'。
+            mesh: 用于采样的网格实例
+            idx_t: 时间步索引, None表示采样所有时间步
+            num_sample: 要采样的点数
+            solution: 要采样的解的名称列表, 如['u']表示采样u(x,t)
+            collection_points: 采集点模式的名称列表
+            use_lhs: 是否使用拉丁超立方采样
+            dtype: 数据类型, 默认为float32
         """
-
         super().__init__(dtype)
 
+        # 保存初始化参数
+        self.idx_t = idx_t
         self.solution_names = solution
         self.collection_points_names = collection_points
-        self.idx_t = idx_t
 
-        # 在特定时间步.
-        if self.idx_t:
-            flatten_mesh = mesh.on_initial_boundary(
-                self.solution_names,
-                self.idx_t
-            )
-
-        # 所有时间步.
-        elif self.solution_names is not None:
-            flatten_mesh = mesh.flatten_mesh(self.solution_names)
-
+        # 情况1: 需要采样解的值（用于训练数据）
         if self.solution_names:
-            (
-                self.spatial_domain_sampled,
-                self.time_domain_sampled,
-                self.solution_sampled,
-            ) = self.sample_mesh(num_sample, flatten_mesh)
+            if self.idx_t:  # 在特定时间步采样, 如t=0.1时刻
+                flatten_mesh = mesh.on_initial_boundary(
+                    self.solution_names,
+                    self.idx_t
+                )
+            else:  # 在所有时间步采样
+                flatten_mesh = mesh.flatten_mesh(self.solution_names)
 
+            # 从网格中随机采样num_sample个点
+            # 返回: 空间坐标、时间坐标、解的值
+            sampled_data = self.sample_mesh(num_sample, flatten_mesh)
+            self.spatial_domain_sampled = sampled_data[0]
+            self.time_domain_sampled = sampled_data[1]
+            self.solution_sampled = sampled_data[2]
+
+            # 将解的值按列分割, 便于处理多个解
+            # 例如: 如果有[u,v]两个解, 则分开存储
             self.solution_sampled = jnp.split(
                 self.solution_sampled,
                 indices_or_sections=self.solution_sampled.shape[1],
                 axis=1
             )
 
-        # 仅采集点.
+        # 情况2: 只采样空间和时间点（用于PDE约束）
         else:
-            (
-                self.spatial_domain_sampled,
-                self.time_domain_sampled
-            ) = self.convert_to_tensor(
-                mesh.collection_points(num_sample, use_lhs)
-            )
-
+            # 使用拉丁超立方采样生成采集点
+            points = mesh.collection_points(num_sample, use_lhs)
+            # 转换为张量格式
+            sampled_points = self.convert_to_tensor(points)
+            self.spatial_domain_sampled = sampled_points[0]
+            self.time_domain_sampled = sampled_points[1]
             self.solution_sampled = None
 
+        # 将空间坐标按维度分割
+        # 例如: 2D问题(x,y)会分成x和y两个数组
         self.spatial_domain_sampled = jnp.split(
             self.spatial_domain_sampled,
             indices_or_sections=self.spatial_domain_sampled.shape[1],
@@ -214,7 +216,7 @@ class DiscreteMeshSampler(SamplerBase):
             损失变量和前向传播的输出字典。
 
         注意:
-            _mode在PINNDataModule类中分配, 可以是以下值之一：
+            _mode在PINNDataModule类中分配, 可以是以下值之一:
             - 'inverse_discrete_1'
             - 'inverse_discrete_2'
             - 'forward_discrete'

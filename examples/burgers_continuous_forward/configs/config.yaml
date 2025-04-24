@@ -62,7 +62,7 @@ net:
     - u
 
 trainer:
-  accelerator: gpu
+  accelerator: cpu
   max_epochs: 1000
   check_val_every_n_epoch: 100
 
