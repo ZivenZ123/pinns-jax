@@ -349,7 +349,7 @@ class MeshBase:
 class Mesh(MeshBase):
     """网格类。
 
-    这个类用于表示和操作规则网格, 需要已经定义了SpatialDomain和TimeDomain类。
+    这个类用于表示和操作规则网格, 需要实例化的SpatialDomain和TimeDomain类。
     如果网格的维度未确定, 建议使用PointCloud类。
     """
 
@@ -364,8 +364,6 @@ class Mesh(MeshBase):
     ):
         """初始化Mesh对象。
 
-        根据空间和时间域生成网格, 并加载解数据。
-
         参数:
             spatial_domain: SpatialDomain类的实例, 表示空间域。
             time_domain: TimeDomain类的实例, 表示时间域。
@@ -378,17 +376,17 @@ class Mesh(MeshBase):
         self.solution = read_data_fn(root_dir)
 
         # 从self.solution字典中获取第一个键值的形状
-        # spatial_points: 空间点的数量(行数)
-        # t_points: 时间点的数量(列数)
+        # _spatial_points: 空间点数(行数)
+        # _t_points: 时间点数(列数)
         # ? 为什么用的是solution的shape而不是spatial_domain的shape
-        spatial_points, t_points = list(self.solution.values())[0].shape
+        _spatial_points, _t_points = list(self.solution.values())[0].shape
 
         self.spatial_domain, self.time_domain = spatial_domain, time_domain
 
-        # 获取网格点上的空间坐标
-        self.spatial_domain_mesh = spatial_domain.generate_mesh(t_points)
-        # 获取网格点上的时间坐标
-        self.time_domain_mesh = time_domain.generate_mesh(spatial_points)
+        # 获取网格点上的空间坐标, 形状为(空间点数, 时间点数, 空间维度)
+        self.spatial_domain_mesh = spatial_domain.generate_mesh(_t_points)
+        # 获取网格点上的时间坐标, 形状为(空间点数, 时间点数, 1)
+        self.time_domain_mesh = time_domain.generate_mesh(_spatial_points)
 
         self.spatial_dim = spatial_domain.spatial_dim
 
@@ -402,7 +400,7 @@ class Mesh(MeshBase):
 class PointCloud(MeshBase):
     """点云类。
 
-    这个类用于表示和操作点云网格, 需要定义空间域、时间域和解的网格。
+    这个类用于表示和操作点云网格, 需要包含了空间域、时间域和解的网格数据。
     与Mesh类不同, PointCloud类可以处理不规则网格。
     """
 
@@ -426,42 +424,77 @@ class PointCloud(MeshBase):
         super().__init__()
         data = read_data_fn(root_dir)
         self.spatial_domain, self.time_domain, self.solution = (
-            data.spatial,
-            data.time,
-            data.solution,
+            data.spatial,  # List[np.ndarray], 每个np.ndarray表示空间域的一个维度,
+                           # 形状为(空间点数, 1)
+            data.time[0],  # np.ndarray, 形状为(时间点数, 1)
+            data.solution,  # Dict[str, np.ndarray], 每个np.ndarray表示一个解,
+                           # 形状为(空间点数, 时间点数)
         )
 
-        if not isinstance(self.solution, dict):
-            raise ValueError("解数据的输出不是字典。")
-
-        if isinstance(self.time_domain, list):
-            if len(self.time_domain) == 1:
-                self.time_domain = self.time_domain[0]
-
-        if not isinstance(self.spatial_domain, list):
-            self.spatial_domain = [self.spatial_domain]
-
-        spatial_num_points, time_num_points = list(
+        _spatial_num_points, _time_num_points = list(
             self.solution.values()
         )[0].shape
 
         self.spatial_dim = len(self.spatial_domain)
         self.time_dim = 1
+        # ? 这个solution_dim在哪里用上?
         self.solution_dim = len(self.solution.keys())
 
-        # 生成空间和时间域的网格
-        self.spatial_domain_mesh = np.zeros(
-            (spatial_num_points, time_num_points, self.spatial_dim)
+        # 生成网格点上的空间坐标
+        # 假设有3个空间点, 有2个时间点, 空间维度为2:
+        # _spatial_arrays 示例 (每个arr的形状为(3, 1, 1)):
+        # [
+        #     [  # 第一个空间维度
+        #       [[x1]],
+        #       [[x2]],
+        #       [[x3]]
+        #     ],
+        #     [  # 第二个空间维度
+        #       [[y1]],
+        #       [[y2]],
+        #       [[y3]]
+        #     ]
+        # ]
+        _spatial_arrays = [arr[:, np.newaxis] for arr in self.spatial_domain]
+        # _broadcasted_arrays 示例 (每个arr的形状为(3, 2, 1)):
+        # [
+        #     [  # 第一个空间维度
+        #         [[x1], [x1]],  # 点1在两个时间点的x坐标
+        #         [[x2], [x2]],  # 点2在两个时间点的x坐标
+        #         [[x3], [x3]]   # 点3在两个时间点的x坐标
+        #     ],
+        #     [  # 第二个空间维度
+        #         [[y1], [y1]],  # 点1在两个时间点的y坐标
+        #         [[y2], [y2]],  # 点2在两个时间点的y坐标
+        #         [[y3], [y3]]   # 点3在两个时间点的y坐标
+        #     ]
+        # ]
+        _broadcasted_arrays = [
+            np.broadcast_to(arr, (_spatial_num_points, _time_num_points, 1))
+            for arr in _spatial_arrays
+        ]
+        # 全网格上的空间坐标示例(spatial_domain_mesh): 形状为(3, 2, 2)
+        # [
+        #     [[x1,y1], [x1,y1]],  # 点1在两个时间点的坐标
+        #     [[x2,y2], [x2,y2]],  # 点2在两个时间点的坐标
+        #     [[x3,y3], [x3,y3]]   # 点3在两个时间点的坐标
+        # ]
+        self.spatial_domain_mesh = np.concatenate(_broadcasted_arrays, axis=-1)
+
+        # 生成网格点上的时间坐标
+        # 首先在第0维添加一个新轴，将形状从(时间点数, 1)变为(1, 时间点数, 1)
+        self.time_domain_mesh = self.time_domain[np.newaxis, ...]
+        # 然后广播到所有空间点，将形状扩展为(空间点数, 时间点数, 1)
+        # 例如，对于3个空间点和2个时间点：
+        # [
+        #     [[t1], [t2]],  # 第1个空间点在所有时间点的时间坐标
+        #     [[t1], [t2]],  # 第2个空间点在所有时间点的时间坐标
+        #     [[t1], [t2]]   # 第3个空间点在所有时间点的时间坐标
+        # ]
+        self.time_domain_mesh = np.broadcast_to(
+            self.time_domain_mesh,
+            (_spatial_num_points, _time_num_points, 1)
         )
-
-        for i, interval in enumerate(self.spatial_domain):
-            self.spatial_domain_mesh[:, :, i] = np.tile(
-                interval, (1, time_num_points)
-            )
-
-        self.time_domain_mesh = np.tile(
-            self.time_domain, (1, spatial_num_points)
-        ).T[:, :, None]
 
         if ub is not None and lb is not None:
             self.lb, self.ub = np.array(lb), np.array(ub)

@@ -16,11 +16,11 @@ class PointCloudData:
     这是一个替代空间和时间类的类, 应该与 `PointCloud` 类一起使用。
 
     属性:
-        spatial (List[np.ndarray]): 空间点数据列表
-        time (np.ndarray): 包含时间值的NumPy数组
-        solution (Dict[str, np.ndarray]): 包含解数据的字典
+        spatial: 空间点网格的数组列表
+        time: 时间点网格的数组列表
+        solution: 包含解数据的字典
     """
 
     spatial: List[np.ndarray]
-    time: np.ndarray
+    time: List[np.ndarray]
     solution: Dict[str, np.ndarray]

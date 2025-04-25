@@ -26,7 +26,9 @@ def read_data_fn(root_path: str) -> Dict[str, np.ndarray]:
     """
 
     # * 从指定路径加载数据文件
-    data = utils.load_data(root_path, "burgers_shock.mat")
+    data: Dict[str, np.ndarray] = utils.load_data(
+        root_path, "burgers_shock.mat"
+    )
     # * 获取精确解的实部
     exact_u: np.ndarray = np.real(data["usol"])
     return {"u": exact_u}
