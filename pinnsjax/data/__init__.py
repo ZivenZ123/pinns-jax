@@ -14,7 +14,7 @@ from .domains.spatial import Interval, Rectangle, RectangularPrism
 # 时间域模块，用于定义时间相关的计算域
 from .domains.time import TimeDomain
 # 网格模块，包含结构化网格和点云表示
-from .mesh.mesh import Mesh, PointCloud
+from .mesh.mesh import MeshBase, Mesh, PointCloud
 # PINN数据模块，用于处理物理信息神经网络的数据
 from .pinn_datamodule import PINNDataModule
 # 边界条件模块，包含狄利克雷边界条件和周期性边界条件
@@ -33,6 +33,7 @@ __all__ = [
     'Rectangle',
     'RectangularPrism',
     'TimeDomain',
+    'MeshBase',
     'Mesh',
     'PointCloud',
     'PINNDataModule',

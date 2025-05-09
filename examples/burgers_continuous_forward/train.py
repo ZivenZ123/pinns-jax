@@ -4,17 +4,18 @@
 连续前向传播训练过程。它包含了数据加载、PDE定义和模型训练的主要功能。
 """
 
-from typing import Dict, Optional, Callable, Any
+from typing import Optional, Callable, Any
 
 import hydra
 import numpy as np
+from numpy.typing import NDArray
 from jax import Array
 from omegaconf import DictConfig
 
 from pinnsjax import utils, train
 
 
-def read_data_fn(root_path: str) -> Dict[str, np.ndarray]:
+def read_data_fn(root_path: str) -> dict[str, NDArray]:
     """从指定的根路径读取并预处理数据。
 
     参数:
@@ -22,25 +23,25 @@ def read_data_fn(root_path: str) -> Dict[str, np.ndarray]:
 
     返回:
         处理后的数据将在Mesh类中使用。
-        在这里 exact_u 是一个 256*100 的 np.ndarray, 表示Burgers方程的精确解。
+        在这里 exact_u 是一个 256*100 的 NDArray, 表示Burgers方程的精确解。
     """
 
     # * 从指定路径加载数据文件
-    data: Dict[str, np.ndarray] = utils.load_data(
+    data: dict[str, NDArray] = utils.load_data(
         root_path, "burgers_shock.mat"
     )
     # * 获取精确解的实部
-    exact_u: np.ndarray = np.real(data["usol"])
+    exact_u: NDArray = np.real(data["usol"])
     return {"u": exact_u}
 
 
 def pde_fn(
     functional_model: Callable[..., Any],
-    params: Dict[str, Array],
-    outputs: Dict[str, Array],
+    params: dict[str, Array],
+    outputs: dict[str, Array],
     x: Array,
     t: Array
-) -> Dict[str, Array]:
+) -> dict[str, Array]:
     """定义Burgers方程的物理约束。
 
     该函数实现了Burgers方程的物理信息神经网络(PINN)约束：

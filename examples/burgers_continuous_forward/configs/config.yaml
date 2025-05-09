@@ -3,7 +3,7 @@ defaults:
   - _self_
 
 N0: 50
-N_b: 50
+N_b: 100
 N_f: 10_000
 
 time_domain:
@@ -26,18 +26,21 @@ train_datasets:
     _target_: pinnsjax.data.MeshSampler
     _partial_: true
     num_sample: ${N_f}
+    seed: 1234
     collection_points:
       - f
   initial_condition:
     _target_: pinnsjax.data.InitialCondition
     _partial_: true
     num_sample: ${N0}
+    seed: 1234
     solution:
       - u
   dirichlet_boundary_condition:
     _target_: pinnsjax.data.DirichletBoundaryCondition
     _partial_: true
     num_sample: ${N_b}
+    seed: 1234
     solution:
       - u
 
@@ -45,6 +48,7 @@ val_dataset:
   mesh_sampler:
     _target_: pinnsjax.data.MeshSampler
     _partial_: true
+    seed: 1234
     solution:
       - u
 
@@ -52,6 +56,7 @@ pred_dataset:
   mesh_sampler:
     _target_: pinnsjax.data.MeshSampler
     _partial_: true
+    seed: 1234
     solution:
       - u
 
