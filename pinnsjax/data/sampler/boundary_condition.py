@@ -40,7 +40,7 @@ class DirichletBoundaryCondition(SamplerBase):
                 discrete: 当问题是离散时为True, 默认为False
                 idx_t: 离散模式下的时间步索引
 
-        属性说明:
+        属性:
             solution_names: Optional[list[str]]
                 解变量名称列表
             discrete: bool

@@ -24,7 +24,7 @@ class MeshBase:
         """初始化MeshBase对象。
         初始化网格的基本属性, 这些属性将在子类中被具体实现和赋值。
 
-        属性说明:
+        属性:
             spatial_domain_mesh: Optional[NDArray]
                 域的空间坐标, 形状为(空间点数, 时间点数, 空间维度)
                 例如, 对于2D空间、3个空间点和2个时间点:

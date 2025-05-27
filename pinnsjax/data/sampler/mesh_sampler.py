@@ -39,7 +39,7 @@ class MeshSampler(SamplerBase):
                 collection_points: 采集点模式的名称列表
                 use_lhs: 是否使用拉丁超立方采样
 
-        属性说明:
+        属性:
             solution_names: Optional[list[str]]
                 解变量名称列表
             idx_t: Optional[int]

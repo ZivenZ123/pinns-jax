@@ -26,7 +26,7 @@ class SamplerBase:
         参数:
             dtype: 用于指定采样后数据的数值类型
 
-        属性说明:
+        属性:
             solution_names: 解变量名称列表
             spatial_domain_sampled: 采样后的空间坐标
             time_domain_sampled: 采样后的时间坐标

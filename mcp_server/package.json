@@ -1,0 +1,32 @@
+{
+  "name": "pinnsjax-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP Server for PINNs-JAX: Physics-Informed Neural Networks with JAX",
+  "main": "build/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node build/index.js",
+    "inspector": "npx @modelcontextprotocol/inspector build/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "zod": "^3.23.8",
+    "child_process": "^1.0.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  },
+  "keywords": [
+    "mcp",
+    "pinn",
+    "physics-informed-neural-networks",
+    "jax",
+    "machine-learning",
+    "pde"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+} 

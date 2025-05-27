@@ -35,7 +35,7 @@ class InitialCondition(SamplerBase):
                 dtype: 数据类型, 默认为'float32'
                 seed: 随机种子, 默认为0
 
-        属性说明:
+        属性:
             solution_names: Optional[list[str]]
                 解变量名称列表
             # ? 这个设计很奇怪, 下面三个中, 两个是list, 一个不是
