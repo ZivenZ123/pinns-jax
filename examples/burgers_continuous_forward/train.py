@@ -4,15 +4,15 @@
 连续前向传播训练过程。它包含了数据加载、PDE定义和模型训练的主要功能。
 """
 
-from typing import Optional, Callable, Any
+from typing import Any, Callable, Optional
 
 import hydra
 import numpy as np
-from numpy.typing import NDArray
 from jax import Array
+from numpy.typing import NDArray
 from omegaconf import DictConfig
 
-from pinnsjax import utils, train
+from pinnsjax import train, utils
 
 
 def read_data_fn(root_path: str) -> dict[str, NDArray]:
@@ -27,9 +27,7 @@ def read_data_fn(root_path: str) -> dict[str, NDArray]:
     """
 
     # * 从指定路径加载数据文件
-    data: dict[str, NDArray] = utils.load_data(
-        root_path, "burgers_shock.mat"
-    )
+    data: dict[str, NDArray] = utils.load_data(root_path, "burgers_shock.mat")
     # * 获取精确解的实部
     exact_u: NDArray = np.real(data["usol"])
     return {"u": exact_u}
@@ -40,7 +38,7 @@ def pde_fn(
     params: dict[str, Array],
     outputs: dict[str, Array],
     x: Array,
-    t: Array
+    t: Array,
 ) -> dict[str, Array]:
     """定义Burgers方程的物理约束。
 
@@ -59,30 +57,22 @@ def pde_fn(
     """
 
     # * 计算u对x和t的一阶偏导数
-    u_x, u_t = utils.gradient(
-        functional_model,
-        argnums=(1, 2),
-        order=1
-    )(params, x, t, 'u')
+    u_x, u_t = utils.gradient(functional_model, argnums=(1, 2), order=1)(
+        params, x, t, "u"
+    )
 
     # * 计算u对x的二阶偏导数
-    u_xx = utils.gradient(
-        functional_model,
-        argnums=1,
-        order=2
-    )(params, x, t, 'u')[0]
+    u_xx = utils.gradient(functional_model, argnums=1, order=2)(
+        params, x, t, "u"
+    )[0]
 
     # ! Burgers方程：u_t + u*u_x - (0.01/π)*u_xx = 0
-    outputs["f"] = u_t + outputs["u"]*u_x - (0.01/np.pi)*u_xx
+    outputs["f"] = u_t + outputs["u"] * u_x - (0.01 / np.pi) * u_xx
 
     return outputs
 
 
-@hydra.main(
-    version_base="1.3",
-    config_path="configs",
-    config_name="config"
-)
+@hydra.main(version_base="1.3", config_path="configs", config_name="config")
 def main(cfg: DictConfig) -> Optional[float]:
     """训练的主入口点。
 

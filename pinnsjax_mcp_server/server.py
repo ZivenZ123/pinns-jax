@@ -8,18 +8,43 @@ PINNs-JAX MCP Server
 - 结果预测和可视化
 - 实验管理和配置
 """
-
-import asyncio
 import json
 import os
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 import yaml
 from mcp.server.fastmcp import FastMCP
 from mcp.server.fastmcp.prompts import base
+
+# 设置项目根目录和Python路径
+PINNSJAX_ROOT = os.environ.get(
+    "PINNSJAX_ROOT",
+    "/Users/zivenzhong/Documents/科研/金融数学/2 文献阅读笔记/"
+    "PINN（第一部分）：非线性偏微分方程的数据驱动解 (2017)/pinns-jax",
+)
+
+# 确保 pinnsjax 包在 Python 路径中
+if PINNSJAX_ROOT not in sys.path:
+    sys.path.insert(0, PINNSJAX_ROOT)
+
+# 尝试导入pinnsjax模块
+try:
+    from pinnsjax import train
+
+    PINNSJAX_AVAILABLE = True
+    print(
+        f"✅ 成功导入 pinnsjax 模块，项目根目录: {PINNSJAX_ROOT}",
+        file=sys.stderr,
+    )
+except ImportError as e:
+    PINNSJAX_AVAILABLE = False
+    print(
+        f"警告: 无法导入pinnsjax模块 ({e})，将使用subprocess方式调用",
+        file=sys.stderr,
+    )
 
 # 创建FastMCP实例
 mcp = FastMCP("PINNs-JAX", dependencies=["jax", "jaxlib", "hydra-core"])
@@ -38,7 +63,7 @@ def train_pinn_model(
     """训练物理信息神经网络模型。支持各种PDE问题的求解，包括热传导、波动方程、Navier-Stokes等。
 
     Args:
-        config_path: 配置文件路径，例如: configs/heat_equation.yaml
+        config_path: 配置文件路径，例如: pinnsjax/conf/heat_equation.yaml
         experiment_name: 实验名称，用于标识此次训练
         epochs: 训练轮数，默认使用配置文件中的设置
         learning_rate: 学习率，默认使用配置文件中的设置
@@ -47,6 +72,66 @@ def train_pinn_model(
     Returns:
         训练结果的描述信息
     """
+    try:
+        if PINNSJAX_AVAILABLE:
+            # 直接调用pinnsjax训练函数
+            try:
+                # 构建配置覆盖参数
+                overrides = []
+                if experiment_name:
+                    overrides.append(f"experiment_name={experiment_name}")
+                if epochs:
+                    overrides.append(f"trainer.max_epochs={epochs}")
+                if learning_rate:
+                    overrides.append(
+                        f"model.optimizer.learning_rate={learning_rate}"
+                    )
+                if override_params:
+                    for key, value in override_params.items():
+                        overrides.append(f"{key}={value}")
+
+                # 调用训练函数
+                result = train.main_train(
+                    config_path=config_path, overrides=overrides
+                )
+
+                return f"""✅ PINN模型训练完成！
+
+**训练配置:**
+- 配置文件: {config_path}
+- 实验名称: {experiment_name or '默认'}
+- 训练轮数: {epochs or '配置文件默认'}
+- 学习率: {learning_rate or '配置文件默认'}
+
+**训练结果:**
+{result}"""
+            except Exception:
+                # 如果直接调用失败，回退到subprocess方式
+                return _train_with_subprocess(
+                    config_path,
+                    experiment_name,
+                    epochs,
+                    learning_rate,
+                    override_params,
+                )
+        else:
+            # 使用subprocess方式
+            return _train_with_subprocess(
+                config_path,
+                experiment_name,
+                epochs,
+                learning_rate,
+                override_params,
+            )
+
+    except Exception as e:
+        return f"❌ 训练失败: {str(e)}"
+
+
+def _train_with_subprocess(
+    config_path, experiment_name, epochs, learning_rate, override_params
+):
+    """使用subprocess方式训练模型的后备方法"""
     try:
         # 构建训练命令
         cmd = [sys.executable, "-m", "pinnsjax.train"]
@@ -250,7 +335,9 @@ def list_available_configs() -> str:
         可用配置列表的描述信息
     """
     try:
-        configs_path = Path("pinnsjax/conf")
+        configs_path = Path(
+            "/Users/zivenzhong/Documents/科研/金融数学/2 文献阅读笔记/PINN（第一部分）：非线性偏微分方程的数据驱动解 (2017)/pinns-jax/pinnsjax/conf"
+        )
         if not configs_path.exists():
             return "❌ 配置目录不存在: pinnsjax/conf"
 
@@ -325,7 +412,7 @@ def get_training_status(experiment_path: Optional[str] = None) -> str:
 # ==================== 资源 (Resources) ====================
 
 
-@mcp.resource("training_history")
+@mcp.resource("file://training_history.json")
 def get_training_history() -> str:
     """存储PINN模型的训练历史和指标数据，包括损失曲线、验证误差等。"""
     try:
@@ -347,7 +434,7 @@ def get_training_history() -> str:
         return f"❌ 无法读取训练历史: {str(e)}"
 
 
-@mcp.resource("model_configs")
+@mcp.resource("file://model_configs.yaml")
 def get_model_configs() -> str:
     """管理PINN模型的配置模板和参数设置，支持不同PDE问题的配置。"""
     try:
@@ -379,7 +466,7 @@ def get_model_configs() -> str:
         return f"❌ 无法读取模型配置: {str(e)}"
 
 
-@mcp.resource("experiment_results")
+@mcp.resource("file://experiment_results.json")
 def get_experiment_results() -> str:
     """存储PINN实验的结果数据，包括模型性能、预测精度等指标。"""
     try:

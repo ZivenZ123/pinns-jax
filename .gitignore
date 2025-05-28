@@ -131,3 +131,12 @@ yarn-error.log*
 *.swp
 *.swo
 *.bak
+
+# MCP 相关
+# MCP 服务器日志和临时文件
+mcp_server_logs/
+*.mcp.log
+# 临时配置文件
+*_temp_config.json
+# MCP 调试文件
+mcp_debug/

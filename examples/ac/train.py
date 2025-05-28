@@ -1,11 +1,10 @@
 from typing import Any, Dict, List, Optional, Tuple
 
 import hydra
-import numpy as np
-import rootutils
 import jax
 import jax.numpy as jnp
-
+import numpy as np
+import rootutils
 from omegaconf import DictConfig
 
 import pinnsjax
@@ -23,22 +22,24 @@ def read_data_fn(root_path):
     return {"u": exact_u}
 
 
-def pde_fn(functional_model,
-           params,
-           outputs: Dict[str, jax.Array],
-           x: jax.Array):
-    """Define the partial differential equations (PDEs).
-    """
+def pde_fn(
+    functional_model, params, outputs: Dict[str, jax.Array], x: jax.Array
+):
+    """Define the partial differential equations (PDEs)."""
 
     u = outputs["u"]
-    u_xx = pinnsjax.utils.fwd_gradient(functional_model, argnums=1, order=2)(params, x, None, 'u')[0]
-    
-    outputs["f"] = 5.0 * u[:-1] - 5.0 * (u[:-1]**3) + 0.0001 * u_xx[:-1]
+    u_xx = pinnsjax.utils.fwd_gradient(functional_model, argnums=1, order=2)(
+        params, x, None, "u"
+    )[0]
+
+    outputs["f"] = 5.0 * u[:-1] - 5.0 * (u[:-1] ** 3) + 0.0001 * u_xx[:-1]
 
     return outputs
 
 
-@hydra.main(version_base="1.3", config_path="configs", config_name="config.yaml")
+@hydra.main(
+    version_base="1.3", config_path="configs", config_name="config.yaml"
+)
 def main(cfg: DictConfig) -> Optional[float]:
     """Main entry point for training.
 
